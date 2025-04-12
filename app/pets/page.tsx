@@ -1,0 +1,180 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import PetCard from "@/components/pet-card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+
+export default function PetsPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  const [pets, setPets] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    type: searchParams.get("type") || "",
+    status: searchParams.get("status") || "",
+    name: searchParams.get("name") || "",
+  });
+
+  useEffect(() => {
+    const fetchPets = async () => {
+      try {
+        setIsLoading(true);
+        
+        // Build query parameters
+        const queryParams = new URLSearchParams();
+        if (filters.type) queryParams.append("type", filters.type);
+        if (filters.status) queryParams.append("status", filters.status);
+        if (filters.name) queryParams.append("name", filters.name);
+        
+        const response = await fetch(`/api/pets?${queryParams.toString()}`);
+        if (!response.ok) {
+          throw new Error("Failed to fetch pets");
+        }
+        
+        const data = await response.json();
+        setPets(data);
+      } catch (error) {
+        console.error("Error fetching pets:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPets();
+  }, [filters]);
+
+  const applyFilters = () => {
+    // Update URL with filters
+    const queryParams = new URLSearchParams();
+    if (filters.type) queryParams.append("type", filters.type);
+    if (filters.status) queryParams.append("status", filters.status);
+    if (filters.name) queryParams.append("name", filters.name);
+    
+    router.push(`/pets?${queryParams.toString()}`);
+  };
+
+  const resetFilters = () => {
+    setFilters({
+      type: "",
+      status: "",
+      name: "",
+    });
+    router.push("/pets");
+  };
+
+  const handleFavorite = (petId: number) => {
+    // TODO: Implement favorite functionality
+    console.log("Add to favorites:", petId);
+  };
+
+  const handleViewDetails = (petId: number) => {
+    router.push(`/pets/${petId}`);
+  };
+
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold mb-6">Find a pet</h1>
+      
+      {/* Filters */}
+      <Card className="mb-8">
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Pet Type</label>
+              <Select
+                value={filters.type}
+                onValueChange={(value) => setFilters({ ...filters, type: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All types" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All types</SelectItem>
+                  <SelectItem value="dog">Dogs</SelectItem>
+                  <SelectItem value="cat">Cats</SelectItem>
+                  <SelectItem value="rabbit">Rabbits</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Status</label>
+              <Select
+                value={filters.status}
+                onValueChange={(value) => setFilters({ ...filters, status: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="All statuses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">All statuses</SelectItem>
+                  <SelectItem value="waiting">Waiting</SelectItem>
+                  <SelectItem value="in_shelter">In Shelter</SelectItem>
+                  <SelectItem value="adopted">Adopted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Pet Name</label>
+              <Input
+                placeholder="Search by name"
+                value={filters.name}
+                onChange={(e) => setFilters({ ...filters, name: e.target.value })}
+              />
+            </div>
+            
+            <div className="flex items-end space-x-2">
+              <Button onClick={applyFilters} className="flex-1">Apply Filters</Button>
+              <Button variant="neutral" onClick={resetFilters}>Reset</Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Results */}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : pets.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {pets.map((pet) => (
+            <PetCard
+              key={pet.id}
+              name={pet.name}
+              type={pet.type}
+              sex={pet.sex}
+              age={`${pet.age} ${pet.age === 1 ? "year" : "years"}`}
+              breed="" // Add breed if you have it in your schema
+              description={pet.description || "No description available"}
+              imageSrc={pet.images && pet.images.length > 0 ? pet.images[0] : undefined}
+              onFavorite={() => handleFavorite(pet.id)}
+              onViewDetails={() => handleViewDetails(pet.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex justify-center items-center h-60 bg-muted/30 rounded-lg">
+          <div className="text-center">
+            <h3 className="text-lg font-medium">No pets found</h3>
+            <p className="text-muted-foreground">Try adjusting your filters</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
