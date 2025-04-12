@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
+import { ArrowLeft } from "lucide-react";
 
 export default function AddPetPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -67,7 +68,7 @@ export default function AddPetPage() {
       
       toast.success("Pet added successfully");
       
-      router.push(`/pets/${data.id}`);
+      router.push("/account/pets");
     } catch (error: any) {
       console.error("Error creating pet:", error);
       toast.error(error.message || "Failed to create pet");
@@ -77,12 +78,22 @@ export default function AddPetPage() {
   };
 
   return (
-    <div className="container mx-auto py-8">
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">Add New Pet</h1>
+          <p className="text-muted-foreground">
+            Add a new pet to your shelter for adoption
+          </p>
+        </div>
+        <Button variant="neutral" onClick={() => router.push("/account/pets")} className="sm:self-start">
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Pets
+        </Button>
+      </div>
+
       <Card>
-        <CardHeader>
-          <CardTitle>Add New Pet</CardTitle>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="pt-6">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
               <FormField

@@ -100,7 +100,7 @@ export default function AdoptionRequestsPage() {
     }
   };
 
-  const fetchAdoptionRequests = async (shelterId: string) => {
+  const fetchAdoptionRequests = async (shelter_id: string) => {
     try {
       const supabase = createClient();
       
@@ -108,7 +108,7 @@ export default function AdoptionRequestsPage() {
       const { data: pets, error: petsError } = await supabase
         .from("pets")
         .select("id")
-        .eq("shelterId", shelterId);
+        .eq("shelter_id", shelter_id);
       
       if (petsError) {
         throw petsError;
@@ -238,13 +238,13 @@ export default function AdoptionRequestsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending":
-        return <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
+        return <Badge variant="neutral" className="bg-yellow-50 text-yellow-700 border-yellow-200">Pending</Badge>;
       case "approved":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Approved</Badge>;
+        return <Badge variant="neutral" className="bg-green-50 text-green-700 border-green-200">Approved</Badge>;
       case "rejected":
-        return <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
+        return <Badge variant="neutral" className="bg-red-50 text-red-700 border-red-200">Rejected</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="neutral">{status}</Badge>;
     }
   };
 

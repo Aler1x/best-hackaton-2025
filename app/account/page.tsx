@@ -83,7 +83,7 @@ export default function AccountPage() {
         const { data: petsData, error: petsError } = await supabase
           .from("pets")
           .select("id", { count: 'exact' })
-          .eq("shelterId", userId);
+          .eq("shelter_id", userId);
         
         if (!petsError) {
           setStats(prev => ({ ...prev, totalPets: petsData?.length || 0 }));
@@ -94,7 +94,7 @@ export default function AccountPage() {
           .from("adoption_requests")
           .select("*", { count: 'exact', head: true })
           .eq("petId", "pets.id")
-          .eq("pets.shelterId", userId);
+          .eq("pets.shelter_id", userId);
         
         if (!requestsError) {
           setStats(prev => ({ ...prev, adoptionRequests: requestsCount || 0 }));
@@ -107,11 +107,11 @@ export default function AccountPage() {
             id,
             status,
             created_at,
-            pets:petId(
+            pets:pet_id(
               name
             )
           `)
-          .eq("pets.shelterId", userId)
+          .eq("pets.shelter_id", userId)
           .order("created_at", { ascending: false })
           .limit(5);
         

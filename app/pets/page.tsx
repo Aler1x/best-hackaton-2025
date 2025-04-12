@@ -15,6 +15,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/header";
+import { useFavorites } from "@/hooks/use-favorites";
 
 export default function PetsPage() {
   const router = useRouter();
@@ -22,12 +23,15 @@ export default function PetsPage() {
 
   const [pets, setPets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { favoriteStatus, toggleFavorite, checkFavoriteStatus } = useFavorites();
+  
   const [filters, setFilters] = useState({
     type: searchParams.get("type") || "all",
     status: searchParams.get("status") || "all",
     name: searchParams.get("name") || "",
+    health: searchParams.get("health") || "",
   });
-
+  
   useEffect(() => {
     const fetchPets = async () => {
       try {
@@ -38,6 +42,7 @@ export default function PetsPage() {
         if (filters.type && filters.type !== "all") queryParams.append("type", filters.type);
         if (filters.status && filters.status !== "all") queryParams.append("status", filters.status);
         if (filters.name) queryParams.append("name", filters.name);
+        if (filters.health) queryParams.append("health", filters.health);
 
         const response = await fetch(`/api/pets?${queryParams.toString()}`);
         if (!response.ok) {
@@ -46,6 +51,11 @@ export default function PetsPage() {
 
         const data = await response.json();
         setPets(data);
+        
+        // Check favorite status for each pet
+        data.forEach((pet: any) => {
+          checkFavoriteStatus(pet.id);
+        });
       } catch (error) {
         console.error("Error fetching pets:", error);
       } finally {
@@ -54,7 +64,7 @@ export default function PetsPage() {
     };
 
     fetchPets();
-  }, [filters]);
+  }, [filters, checkFavoriteStatus]);
 
   const applyFilters = () => {
     // Update URL with filters
@@ -62,6 +72,7 @@ export default function PetsPage() {
     if (filters.type && filters.type !== "all") queryParams.append("type", filters.type);
     if (filters.status && filters.status !== "all") queryParams.append("status", filters.status);
     if (filters.name) queryParams.append("name", filters.name);
+    if (filters.health) queryParams.append("health", filters.health);
 
     router.push(`/pets?${queryParams.toString()}`);
   };
@@ -71,13 +82,13 @@ export default function PetsPage() {
       type: "all",
       status: "all",
       name: "",
+      health: "",
     });
     router.push("/pets");
   };
 
   const handleFavorite = (petId: number) => {
-    // TODO: Implement favorite functionality
-    console.log("Add to favorites:", petId);
+    toggleFavorite(petId);
   };
 
   const handleViewDetails = (petId: number) => {
@@ -145,6 +156,15 @@ export default function PetsPage() {
                 <Button variant="neutral" onClick={resetFilters}>Reset</Button>
               </div>
             </div>
+
+            <div className="mt-4">
+              <label className="text-sm font-medium mb-1 block">Health Info</label>
+              <Input
+                placeholder="Search by health info (e.g. vaccinated, spayed, neutered)"
+                value={filters.health}
+                onChange={(e) => setFilters({ ...filters, health: e.target.value })}
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -165,6 +185,7 @@ export default function PetsPage() {
                 breed="" // Add breed if you have it in your schema
                 description={pet.description || "No description available"}
                 imageSrc={pet.images && pet.images.length > 0 ? pet.images[0] : undefined}
+                isFavorite={favoriteStatus[pet.id] || false}
                 onFavorite={() => handleFavorite(pet.id)}
                 onViewDetails={() => handleViewDetails(pet.id)}
               />

@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { HeartIcon, ImageIcon } from "lucide-react";
+import { Heart, ImageIcon } from "lucide-react";
 import Image from "next/image";
 
 interface PetCardProps {
@@ -13,6 +13,7 @@ interface PetCardProps {
   breed: string;
   description: string;
   imageSrc?: string;
+  isFavorite?: boolean;
   onFavorite?: () => void;
   onViewDetails?: () => void;
 }
@@ -25,6 +26,7 @@ export default function PetCard({
   breed,
   description,
   imageSrc,
+  isFavorite = false,
   onFavorite,
   onViewDetails
 }: PetCardProps) {
@@ -52,11 +54,12 @@ export default function PetCard({
           <Button 
             size="icon" 
             variant="neutral" 
-            className="h-8 w-8"
+            className={`h-8 w-8 ${isFavorite ? 'text-red-500 hover:text-red-600' : 'hover:text-red-400'}`}
             onClick={onFavorite}
             type="button"
+            title={isFavorite ? "Remove from favorites" : "Add to favorites"}
           >
-            <HeartIcon className="h-4 w-4" />
+            <Heart className="h-4 w-4" fill={isFavorite ? "currentColor" : "none"} />
           </Button>
         </div>
         <CardDescription>{sex} • {age} • {breed}</CardDescription>

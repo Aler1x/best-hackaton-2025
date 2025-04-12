@@ -32,7 +32,7 @@ export async function GET(
       }
     })
     .from(pets)
-    .leftJoin(shelters, eq(pets.shelterId, shelters.id))
+    .leftJoin(shelters, eq(pets.shelter_id, shelters.id))
     .where(eq(pets.id, id))
     .limit(1);
     
@@ -76,7 +76,7 @@ export async function PATCH(
     }
     
     // Check if the user is the owner of the pet
-    if (pet[0].shelterId !== user.id) {
+    if (pet[0].shelter_id !== user.id) {
       return NextResponse.json({ error: 'You can only update your own pets' }, { status: 403 });
     }
     
@@ -84,7 +84,7 @@ export async function PATCH(
     const body = await req.json();
     
     // Don't allow changing the shelter ID
-    delete body.shelterId;
+    delete body.shelter_id;
     
     // Validate images array if provided
     if (body.images !== undefined) {

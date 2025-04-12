@@ -17,7 +17,7 @@ type ShelterProfile = {
   address: string;
   phone: string;
   website: string;
-  donationLink: string;
+  donation_link: string;
   location: { lat: number; lng: number } | null;
 };
 
@@ -39,7 +39,7 @@ export default function ProfilePage() {
     address: "",
     phone: "",
     website: "",
-    donationLink: "",
+    donation_link: "",
     location: null,
   });
   
@@ -94,7 +94,7 @@ export default function ProfilePage() {
             address: shelterData.address || "",
             phone: shelterData.phone || "",
             website: shelterData.website || "",
-            donationLink: shelterData.donationLink || "",
+            donation_link: shelterData.donation_link || "",
             location: shelterData.location || null,
           });
         }
@@ -143,7 +143,6 @@ export default function ProfilePage() {
         .upsert({
           id: userId,
           ...shelterProfile,
-          updatedAt: new Date().toISOString(),
         });
       
       if (error) throw error;
@@ -327,7 +326,7 @@ export default function ProfilePage() {
               <Input
                 id="donationLink"
                 name="donationLink"
-                value={shelterProfile.donationLink || ""}
+                value={shelterProfile.donation_link || ""}
                 onChange={handleShelterChange}
                 placeholder="https://yourshelter.org/donate"
                 disabled={isSaving}
@@ -346,7 +345,7 @@ export default function ProfilePage() {
                         Longitude: {shelterProfile.location.lng.toFixed(6)}
                       </span>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleLocationPick}>
+                    <Button variant="neutral" size="sm" onClick={handleLocationPick}>
                       Update Location
                     </Button>
                   </div>
@@ -356,7 +355,7 @@ export default function ProfilePage() {
                     <p className="text-sm text-muted-foreground text-center">
                       No location set. This helps adopters find pets near them.
                     </p>
-                    <Button variant="outline" size="sm" onClick={handleLocationPick}>
+                    <Button variant="neutral" size="sm" onClick={handleLocationPick}>
                       Use Current Location
                     </Button>
                   </div>

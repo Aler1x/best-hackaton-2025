@@ -4,40 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PawPrintIcon, SearchIcon, UsersIcon, ImageIcon, MessageCircle } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import PetCard from "@/components/pet-card";
-
-const samplePets = [
-  {
-    id: 1,
-    name: "Bella",
-    type: "Dog",
-    sex: "Female",
-    age: "2 years",
-    breed: "Golden Retriever",
-    description: "Bella is a friendly and energetic dog who loves to play. She's great with children and other pets.",
-    imageSrc: "/pet1.jpg" // Will use this when images are available
-  },
-  {
-    id: 2,
-    name: "Max",
-    type: "Cat",
-    sex: "Male",
-    age: "1 year",
-    breed: "Domestic Shorthair",
-    description: "Max is a curious and playful cat who loves to explore. He's very affectionate and loves to cuddle.",
-    imageSrc: "/pet2.jpg" // Will use this when images are available
-  },
-  {
-    id: 3,
-    name: "Luna",
-    type: "Rabbit",
-    sex: "Female",
-    age: "6 months",
-    breed: "Holland Lop",
-    description: "Luna is a sweet and gentle rabbit who enjoys being handled. She's litter-trained and loves to hop around.",
-    imageSrc: "/pet3.jpg" // Will use this when images are available
-  }
-];
+import LendingPets from "@/components/lending-pets";
 
 export default function Home() {
   return (
@@ -99,34 +66,21 @@ export default function Home() {
             <div className="space-y-2">
               <div className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors">
                 <PawPrintIcon className="mr-1 h-3.5 w-3.5" />
-                Available Pets
+                Pets Available For Lending
               </div>
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Meet Our Furry Friends</h2>
               <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                These lovely animals are waiting for their forever homes. Could you be their perfect match?
+                These lovely animals are waiting for a temporary home. Could you help them out?
               </p>
             </div>
           </div>
-          <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 py-8 md:grid-cols-2 lg:grid-cols-3">
-            {/* Map through the sample pet data to render cards */}
-            {samplePets.map((pet) => (
-              <PetCard
-                key={pet.id}
-                name={pet.name}
-                type={pet.type}
-                sex={pet.sex}
-                age={pet.age}
-                breed={pet.breed}
-                description={pet.description}
-                // Uncomment once images are available
-                // imageSrc={pet.imageSrc}
-                onFavorite={() => console.log(`Favorited ${pet.name}`)}
-                onViewDetails={() => console.log(`Viewing details for ${pet.name}`)}
-              />
-            ))}
+          <div className="mx-auto max-w-5xl py-8">
+            <LendingPets />
           </div>
           <div className="flex justify-center">
-            <Button variant="neutral" className="mt-8">View All Pets</Button>
+            <Link href="/pets">
+              <Button variant="neutral" className="mt-8">View All Pets</Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -230,6 +184,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-      </div>
+    </div>
   );
 }

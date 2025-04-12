@@ -11,6 +11,8 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type');
     const status = searchParams.get('status');
     const name = searchParams.get('name');
+    const shelter = searchParams.get('shelter');
+    const health = searchParams.get('health');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
@@ -37,6 +39,14 @@ export async function GET(req: NextRequest) {
     
     if (name) {
       query = query.where(like(pets.name, `%${name}%`));
+    }
+    
+    if (shelter) {
+      query = query.where(eq(pets.shelter_id, shelter));
+    }
+    
+    if (health) {
+      query = query.where(like(pets.health, `%${health}%`));
     }
     
     // Apply pagination
@@ -108,7 +118,7 @@ export async function POST(req: NextRequest) {
     const db = await createDrizzleClient();
     const petData = {
       ...body,
-      shelterId: shelterData.id,
+      shelter_id: shelterData.id,
       images: Array.isArray(body.images) ? body.images : [],
     };
     
@@ -148,7 +158,7 @@ export async function DELETE(req: NextRequest) {
     }
     
     // Check if the user is the owner of the pet
-    if (pet[0].shelterId !== user.id) {
+    if (pet[0].shelter_id !== user.id) {
       return NextResponse.json({ error: 'You can only delete your own pets' }, { status: 403 });
     }
     

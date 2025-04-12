@@ -23,14 +23,14 @@ import {
 
 interface PetFormProps {
   onSubmit: (data: any) => Promise<boolean>;
-  shelterId: string | null;
+  shelter_id: string | null;
   initialData?: any;
   isEdit?: boolean;
 }
 
 export default function PetForm({ 
   onSubmit, 
-  shelterId, 
+  shelter_id, 
   initialData = null, 
   isEdit = false 
 }: PetFormProps) {
@@ -53,8 +53,8 @@ export default function PetForm({
     setIsSubmitting(true);
     
     // Add shelter ID to data
-    if (shelterId && !isEdit) {
-      data.shelterId = shelterId;
+    if (shelter_id && !isEdit) {
+      data.shelter_id = shelter_id;
     }
     
     const success = await onSubmit(data);

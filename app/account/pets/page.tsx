@@ -49,7 +49,7 @@ type Pet = {
   description: string | null;
   health: string | null;
   location: { lat: number; lng: number; } | null;
-  shelterId: string;
+  shelter_id: string;
   createdAt: string;
   updatedAt: string;
   images: string[];
@@ -112,14 +112,14 @@ export default function PetsPage() {
     }
   };
 
-  const fetchPets = async (shelterId: string) => {
+  const fetchPets = async (shelter_id: string) => {
     try {
       const supabase = createClient();
       
       const { data, error } = await supabase
         .from("pets")
         .select("*")
-        .eq("shelterId", shelterId);
+        .eq("shelter_id", shelter_id);
       
       if (error) {
         throw error;
@@ -223,7 +223,7 @@ export default function PetsPage() {
             Manage the pets available for adoption at your shelter
           </p>
         </div>
-        <Link href="/account/pets/new">
+        <Link href="/account/pets/add">
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             Add New Pet
@@ -303,7 +303,7 @@ export default function PetsPage() {
             <p className="text-muted-foreground mb-6">
               Add pets to your shelter to help them find a new home
             </p>
-            <Link href="/account/pets/new">
+            <Link href="/account/pets/add">
               <Button>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Your First Pet

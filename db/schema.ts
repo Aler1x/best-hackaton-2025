@@ -38,7 +38,7 @@ export const pets = pgTable('pets', {
   description: text('description'),
   health: text('health'),
   location: json('location').$type<{ lat: number, lng: number }>(),
-  shelterId: text('shelter_id').references(() => shelters.id),
+  shelter_id: text('shelter_id').references(() => shelters.id),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
   images: json('images').$type<string[]>(),
@@ -115,7 +115,7 @@ export const sheltersRelations = relations(shelters, ({ many }) => ({
 
 export const petsRelations = relations(pets, ({ one, many }) => ({
   shelter: one(shelters, {
-    fields: [pets.shelterId],
+    fields: [pets.shelter_id],
     references: [shelters.id],
   }),
   favorites: many(favorites),

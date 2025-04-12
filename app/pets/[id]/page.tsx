@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Pencil, Trash2, HeartIcon } from "lucide-react";
+import { Pencil, Trash2, Heart } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
+import { useFavorites } from "@/hooks/use-favorites";
 
 export default function PetDetailPage({ params }: { params: { id: string } }) {
   const [pet, setPet] = useState<any>(null);
@@ -17,6 +18,8 @@ export default function PetDetailPage({ params }: { params: { id: string } }) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [isShelterOwner, setIsShelterOwner] = useState(false);
   const router = useRouter();
+  const petId = parseInt(params.id);
+  const { favoriteStatus, toggleFavorite, checkFavoriteStatus } = useFavorites();
 
   useEffect(() => {
     const fetchPet = async () => {
@@ -30,10 +33,13 @@ export default function PetDetailPage({ params }: { params: { id: string } }) {
         setPet(data.pet);
         setShelter(data.shelter);
         
+        // Check favorite status
+        await checkFavoriteStatus(petId);
+        
         // Check if current user is the shelter owner
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (user && data.pet.shelterId === user.id) {
+        if (user && data.pet.shelter_id === user.id) {
           setIsShelterOwner(true);
         }
       } catch (error) {
@@ -45,7 +51,7 @@ export default function PetDetailPage({ params }: { params: { id: string } }) {
     };
 
     fetchPet();
-  }, [params.id]);
+  }, [params.id, petId, checkFavoriteStatus]);
 
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this pet?")) {
@@ -72,6 +78,10 @@ export default function PetDetailPage({ params }: { params: { id: string } }) {
     } finally {
       setIsDeleting(false);
     }
+  };
+  
+  const handleToggleFavorite = () => {
+    toggleFavorite(petId);
   };
 
   if (isLoading) {
@@ -230,9 +240,12 @@ export default function PetDetailPage({ params }: { params: { id: string } }) {
                     Back to All Pets
                   </Button>
                   {!isShelterOwner && (
-                    <Button className="flex items-center space-x-2">
-                      <HeartIcon className="h-4 w-4" />
-                      <span>Add to Favorites</span>
+                    <Button 
+                      className={`flex items-center space-x-2 ${favoriteStatus[petId] ? 'bg-red-500 hover:bg-red-600' : ''}`}
+                      onClick={handleToggleFavorite}
+                    >
+                      <Heart className="h-4 w-4" fill={favoriteStatus[petId] ? "currentColor" : "none"} />
+                      <span>{favoriteStatus[petId] ? "Remove from Favorites" : "Add to Favorites"}</span>
                     </Button>
                   )}
                 </div>
