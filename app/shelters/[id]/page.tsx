@@ -59,12 +59,12 @@ export default function ShelterDetailsPage() {
     router.push("/shelters");
   };
 
-  const handlePetDetails = (petId: number) => {
-    router.push(`/pets/${petId}`);
+  const handlePetDetails = (pet_id: number) => {
+    router.push(`/pets/${pet_id}`);
   };
   
-  const handleFavorite = (petId: number) => {
-    toggleFavorite(petId);
+  const handleFavorite = (pet_id: number) => {
+    toggleFavorite(pet_id);
   };
 
   if (isLoading) {
@@ -154,10 +154,10 @@ export default function ShelterDetailsPage() {
                 </div>
               </div>
               
-              {shelter.donationLink && (
+              {shelter.donation_link && (
                 <Button className="w-full md:w-auto" asChild>
                   <a 
-                    href={shelter.donationLink.startsWith('http') ? shelter.donationLink : `https://${shelter.donationLink}`}
+                    href={shelter.donation_link.startsWith('http') ? shelter.donation_link : `https://${shelter.donation_link}`}
                     target="_blank" 
                     rel="noopener noreferrer"
                   >

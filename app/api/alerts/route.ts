@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     // Get all alerts for the current user
     const alerts = await db.select()
       .from(petAlerts)
-      .where(eq(petAlerts.volunteerId, user.id));
+      .where(eq(petAlerts.volunteer_id, user.id));
     
     return NextResponse.json(alerts);
   } catch (error) {
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
     
     // Create the alert
     const newAlert = await db.insert(petAlerts).values({
-      volunteerId: user.id,
+      volunteer_id: user.id,
       petType,
       location,
       active: true,
@@ -121,7 +121,7 @@ export async function DELETE(req: NextRequest) {
     }
     
     // Check if the user is the owner of the alert
-    if (alert[0].volunteerId !== user.id) {
+    if (alert[0].volunteer_id !== user.id) {
       return NextResponse.json({ error: 'You can only delete your own alerts' }, { status: 403 });
     }
     

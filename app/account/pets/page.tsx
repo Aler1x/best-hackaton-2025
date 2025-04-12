@@ -50,15 +50,15 @@ type Pet = {
   health: string | null;
   location: { lat: number; lng: number; } | null;
   shelter_id: string;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   images: string[];
 };
 
 export default function PetsPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user_id, setUser_id] = useState<string | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
@@ -85,7 +85,7 @@ export default function PetsPage() {
           return;
         }
 
-        setUserId(user.id);
+        setUser_id(user.id);
 
       // Check if user is a shelter
       const { data: userData, error: userError } = await supabase
@@ -198,8 +198,8 @@ export default function PetsPage() {
             : b.age - a.age;
         case "date":
           return direction === 'asc' 
-            ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() 
-            : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+            ? new Date(a.created_at).getTime() - new Date(b.created_at).getTime() 
+            : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         default:
           return 0;
       }
@@ -451,7 +451,7 @@ export default function PetsPage() {
                     <Info className="h-4 w-4 mr-2 text-muted-foreground" />
                     Listed On
                   </p>
-                  <p className="pl-6">{formatDate(selectedPet.createdAt)}</p>
+                  <p className="pl-6">{formatDate(selectedPet.created_at)}</p>
                 </div>
               </div>
 

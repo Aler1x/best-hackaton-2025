@@ -39,12 +39,12 @@ export default function LendingPets() {
     fetchLendingPets();
   }, [checkFavoriteStatus]);
 
-  const handleFavorite = (petId: number) => {
-    toggleFavorite(petId);
+  const handleFavorite = (pet_id: number) => {
+    toggleFavorite(pet_id);
   };
 
-  const handleViewDetails = (petId: number) => {
-    window.location.href = `/pets/${petId}`;
+  const handleViewDetails = (pet_id: number) => {
+    window.location.href = `/pets/${pet_id}`;
   };
 
   if (isLoading) {

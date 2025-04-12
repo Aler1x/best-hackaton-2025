@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import ShelterCard from "@/components/shelter-card";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/header";
 
-export default function SheltersPage() {
+// Client component that uses searchParams
+function SheltersPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -108,7 +109,7 @@ export default function SheltersPage() {
                 address={shelter.address}
                 phone={shelter.phone}
                 website={shelter.website}
-                donationLink={shelter.donationLink}
+                donation_link={shelter.donation_link}
                 onViewDetails={() => handleViewDetails(shelter.id)}
               />
             ))}
@@ -123,5 +124,29 @@ export default function SheltersPage() {
         )}
       </div>
     </>
+  );
+}
+
+// Loading fallback
+function SheltersPageFallback() {
+  return (
+    <>
+      <Header />
+      <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold mb-6">Find Shelters</h1>
+        <div className="flex justify-center items-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+// Main page component with suspense boundary
+export default function SheltersPage() {
+  return (
+    <Suspense fallback={<SheltersPageFallback />}>
+      <SheltersPageContent />
+    </Suspense>
   );
 }

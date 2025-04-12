@@ -10,8 +10,15 @@ import { toast } from "sonner";
 import { Pencil, Trash2, Heart } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import { useFavorites } from "@/hooks/use-favorites";
+import { useParams } from "next/navigation";
 
-export default function PetDetailPage({ params }: { params: { id: string } }) {
+export default function PetDetailPage() {
+  const params = useParams();
+
+  if (!params.id || typeof params.id !== 'string') {
+    return <div>No pet ID provided</div>;
+  }
+
   const [pet, setPet] = useState<any>(null);
   const [shelter, setShelter] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PetCard from "@/components/pet-card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import Header from "@/components/header";
 import { useFavorites } from "@/hooks/use-favorites";
 
-export default function PetsPage() {
+// Create a client component that uses searchParams
+function PetsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -87,12 +88,12 @@ export default function PetsPage() {
     router.push("/pets");
   };
 
-  const handleFavorite = (petId: number) => {
-    toggleFavorite(petId);
+  const handleFavorite = (pet_id: number) => {
+    toggleFavorite(pet_id);
   };
 
-  const handleViewDetails = (petId: number) => {
-    router.push(`/pets/${petId}`);
+  const handleViewDetails = (pet_id: number) => {
+    router.push(`/pets/${pet_id}`);
   };
 
   return (
@@ -201,5 +202,29 @@ export default function PetsPage() {
         )}
       </div>
     </>
+  );
+}
+
+// Create a loading fallback
+function PetsPageFallback() {
+  return (
+    <>
+      <Header />
+      <div className="mx-auto py-8 px-4 sm:px-6 lg:px-8">
+        <h1 className="text-3xl font-bold mb-6">Find a pet</h1>
+        <div className="flex justify-center items-center h-60">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    </>
+  );
+}
+
+// Main page component with suspense boundary
+export default function PetsPage() {
+  return (
+    <Suspense fallback={<PetsPageFallback />}>
+      <PetsPageContent />
+    </Suspense>
   );
 }

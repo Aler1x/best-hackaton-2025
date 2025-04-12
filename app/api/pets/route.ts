@@ -19,41 +19,41 @@ export async function GET(req: NextRequest) {
     // Get database client
     const db = await createDrizzleClient();
     
-    // Initialize query
-    let query = db.select().from(pets);
+    // Start with base query
+    let baseQuery = db.select().from(pets);
     
-    // Apply filters
+    // Apply filters with type assertions
     if (type) {
       const types = type.split(',');
       if (types.length > 0 && types.every(t => Object.values(petTypeEnum.enumValues).includes(t as any))) {
-        query = query.where(inArray(pets.type, types as any[]));
+        baseQuery = baseQuery.where(inArray(pets.type, types as any[])) as typeof baseQuery;
       }
     }
     
     if (status) {
       const statuses = status.split(',');
       if (statuses.length > 0 && statuses.every(s => Object.values(petStatusEnum.enumValues).includes(s as any))) {
-        query = query.where(inArray(pets.status, statuses as any[]));
+        baseQuery = baseQuery.where(inArray(pets.status, statuses as any[])) as typeof baseQuery;
       }
     }
     
     if (name) {
-      query = query.where(like(pets.name, `%${name}%`));
+      baseQuery = baseQuery.where(like(pets.name, `%${name}%`)) as typeof baseQuery;
     }
     
     if (shelter) {
-      query = query.where(eq(pets.shelter_id, shelter));
+      baseQuery = baseQuery.where(eq(pets.shelter_id, shelter)) as typeof baseQuery;
     }
     
     if (health) {
-      query = query.where(like(pets.health, `%${health}%`));
+      baseQuery = baseQuery.where(like(pets.health, `%${health}%`)) as typeof baseQuery;
     }
     
     // Apply pagination
-    query = query.limit(limit).offset(offset);
+    baseQuery = baseQuery.limit(limit).offset(offset) as typeof baseQuery;
     
     // Execute query
-    const result = await query;
+    const result = await baseQuery;
     
     return NextResponse.json(result);
   } catch (error) {

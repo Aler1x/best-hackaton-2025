@@ -7,10 +7,10 @@ import { createClient } from '@/utils/supabase/server';
 // GET /api/pets/[id] - Get a pet by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid pet ID' }, { status: 400 });
@@ -28,7 +28,7 @@ export async function GET(
         address: shelters.address,
         phone: shelters.phone,
         website: shelters.website,
-        donationLink: shelters.donationLink,
+        donation_link: shelters.donation_link,
       }
     })
     .from(pets)
@@ -50,10 +50,10 @@ export async function GET(
 // PATCH /api/pets/[id] - Update a pet by ID
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt((await params).id);
     
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid pet ID' }, { status: 400 });
@@ -102,7 +102,7 @@ export async function PATCH(
     const updatedPet = await db.update(pets)
       .set({
         ...body,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       })
       .where(eq(pets.id, id))
       .returning();

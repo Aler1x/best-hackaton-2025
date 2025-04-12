@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDrizzleClient } from '@/lib/db';
 import { foundPets, petTypeEnum, petAlerts } from '@/db/schema';
+import { sql } from 'drizzle-orm';
 import { eq, and } from 'drizzle-orm';
 import { createClient } from '@/utils/supabase/server';
 
@@ -16,23 +17,29 @@ export async function GET(req: NextRequest) {
     // Get database client
     const db = await createDrizzleClient();
     
-    // Initialize query
-    let query = db.select().from(foundPets);
+    // Build query with SQL template
+    let query = sql`SELECT * FROM found_pets`;
     
-    // Apply filters
+    // Apply filters (this is a simplified approach)
+    let whereConditions = [];
+    
     if (type && Object.values(petTypeEnum.enumValues).includes(type as any)) {
-      query = query.where(eq(foundPets.type, type as any));
+      whereConditions.push(sql`type = ${type}`);
     }
     
     if (status) {
-      query = query.where(eq(foundPets.status, status));
+      whereConditions.push(sql`status = ${status}`);
+    }
+    
+    if (whereConditions.length > 0) {
+      query = sql`${query} WHERE ${sql.join(whereConditions, sql` AND `)}`;
     }
     
     // Apply pagination
-    query = query.limit(limit).offset(offset);
+    query = sql`${query} LIMIT ${limit} OFFSET ${offset}`;
     
     // Execute query
-    const result = await query;
+    const result = await db.execute(query);
     
     return NextResponse.json(result);
   } catch (error) {
@@ -87,7 +94,7 @@ export async function POST(req: NextRequest) {
     
     // Create the found pet report
     const newFoundPet = await db.insert(foundPets).values({
-      volunteerId: user.id,
+      volunteer_id: user.id,
       type,
       description,
       location,
@@ -95,12 +102,9 @@ export async function POST(req: NextRequest) {
       images: images || [],
     }).returning();
     
-    // Find matching alerts within the radius
-    // This would require a more complex query with PostGIS for proper radius search
-    // For now, we'll just use a simple approximation
-    const matchingAlerts = await db.select()
-      .from(petAlerts)
-      .where(eq(petAlerts.petType, type));
+    // Find matching alerts (using raw SQL to avoid type issues)
+    const matchingAlertsQuery = sql`SELECT * FROM pet_alerts WHERE pet_type = ${type}`;
+    const matchingAlerts = await db.execute(matchingAlertsQuery);
     
     // In a production app, we would also:
     // 1. Check if the alert location is within the radius of the found pet
@@ -144,18 +148,16 @@ export async function PATCH(req: NextRequest) {
     // Get database client
     const db = await createDrizzleClient();
     
-    // Get the found pet to check ownership
-    const foundPet = await db.select()
-      .from(foundPets)
-      .where(eq(foundPets.id, id))
-      .limit(1);
+    // Get the found pet to check ownership (using raw SQL)
+    const findPetQuery = sql`SELECT * FROM found_pets WHERE id = ${id} LIMIT 1`;
+    const foundPet = await db.execute(findPetQuery);
     
     if (foundPet.length === 0) {
       return NextResponse.json({ error: 'Found pet report not found' }, { status: 404 });
     }
     
     // Check if the user is the owner of the report
-    if (foundPet[0].volunteerId !== user.id) {
+    if (foundPet[0].volunteer_id !== user.id) {
       return NextResponse.json({ error: 'You can only update your own reports' }, { status: 403 });
     }
     
@@ -163,7 +165,7 @@ export async function PATCH(req: NextRequest) {
     const updatedFoundPet = await db.update(foundPets)
       .set({
         status,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       })
       .where(eq(foundPets.id, id))
       .returning();

@@ -40,19 +40,17 @@ export default function Home() {
             <div className="justify-center hidden lg:flex">
               <div className="relative w-[550px] h-[550px] rounded-lg bg-secondary-background overflow-hidden">
                 {/* Fallback icon if image not available */}
-                <div className="absolute inset-0 flex items-center justify-center">
+                {/* <div className="absolute inset-0 flex items-center justify-center">
                   <ImageIcon className="h-16 w-16 text-muted-foreground" />
-                </div>
-                {/* Uncomment when image is available */}
-                {/* 
+                </div> */}
+
                 <Image
-                  src="/hero-pets.png"
+                  src="/cats.jpg"
                   alt="Happy rescued pets"
                   fill
                   className="object-cover"
                   priority
                 />
-                */}
               </div>
             </div>
           </div>

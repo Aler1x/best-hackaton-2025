@@ -12,46 +12,46 @@ export function useFavorites() {
   const router = useRouter();
   
   // Check if a pet is favorited
-  const checkFavoriteStatus = useCallback(async (petId: number) => {
+  const checkFavoriteStatus = useCallback(async (pet_id: number) => {
     try {
-      setIsLoading(prev => ({ ...prev, [petId]: true }));
+      setIsLoading(prev => ({ ...prev, [pet_id]: true }));
       
       if (!user) {
-        setFavoriteStatus(prev => ({ ...prev, [petId]: false }));
+        setFavoriteStatus(prev => ({ ...prev, [pet_id]: false }));
         return false;
       }
       
-      const response = await fetch(`/api/favorites/check?petId=${petId}`);
+      const response = await fetch(`/api/favorites/check?pet_id=${pet_id}`);
       if (!response.ok) throw new Error('Failed to check favorite status');
       
       const { isFavorite } = await response.json();
-      setFavoriteStatus(prev => ({ ...prev, [petId]: isFavorite }));
+      setFavoriteStatus(prev => ({ ...prev, [pet_id]: isFavorite }));
       return isFavorite;
     } catch (error) {
       console.error('Error checking favorite status:', error);
       return false;
     } finally {
-      setIsLoading(prev => ({ ...prev, [petId]: false }));
+      setIsLoading(prev => ({ ...prev, [pet_id]: false }));
     }
   }, [user]);
   
   // Toggle favorite status for a pet
-  const toggleFavorite = useCallback(async (petId: number) => {
+  const toggleFavorite = useCallback(async (pet_id: number) => {
     try {
       if (!user) {
         router.push('/auth/signin?next=/pets');
         return;
       }
       
-      setIsLoading(prev => ({ ...prev, [petId]: true }));
-      const currentStatus = favoriteStatus[petId];
+      setIsLoading(prev => ({ ...prev, [pet_id]: true }));
+      const currentStatus = favoriteStatus[pet_id];
       
       // Optimistic update
-      setFavoriteStatus(prev => ({ ...prev, [petId]: !currentStatus }));
+      setFavoriteStatus(prev => ({ ...prev, [pet_id]: !currentStatus }));
       
       if (currentStatus) {
         // Remove from favorites
-        const response = await fetch(`/api/favorites?petId=${petId}`, {
+        const response = await fetch(`/api/favorites?pet_id=${pet_id}`, {
           method: 'DELETE',
         });
         
@@ -62,7 +62,7 @@ export function useFavorites() {
         const response = await fetch('/api/favorites', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ petId }),
+          body: JSON.stringify({ pet_id }),
         });
         
         if (!response.ok) throw new Error('Failed to add to favorites');
@@ -71,10 +71,10 @@ export function useFavorites() {
     } catch (error) {
       console.error('Error toggling favorite:', error);
       // Revert optimistic update on error
-      setFavoriteStatus(prev => ({ ...prev, [petId]: !prev[petId] }));
+      setFavoriteStatus(prev => ({ ...prev, [pet_id]: !prev[pet_id] }));
       toast.error('Failed to update favorites');
     } finally {
-      setIsLoading(prev => ({ ...prev, [petId]: false }));
+      setIsLoading(prev => ({ ...prev, [pet_id]: false }));
     }
   }, [user, router, favoriteStatus]);
   
@@ -83,6 +83,6 @@ export function useFavorites() {
     isLoading,
     checkFavoriteStatus,
     toggleFavorite,
-    isFavorite: (petId: number) => favoriteStatus[petId] || false,
+    isFavorite: (pet_id: number) => favoriteStatus[pet_id] || false,
   };
 } 

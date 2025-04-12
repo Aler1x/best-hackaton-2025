@@ -6,10 +6,10 @@ import { eq } from 'drizzle-orm';
 // GET /api/shelters/[id] - Get a single shelter by ID
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const id = (await params).id;
     
     if (!id) {
       return NextResponse.json({ error: 'Missing shelter ID' }, { status: 400 });

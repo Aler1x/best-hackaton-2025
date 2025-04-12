@@ -15,7 +15,6 @@ export async function GET(req: NextRequest) {
     // Using SQL's random() function to get random results
     const result = await db.select()
       .from(pets)
-      .where(eq(pets.status, 'in_shelter'))
       .orderBy(sql`RANDOM()`)
       .limit(limit);
     

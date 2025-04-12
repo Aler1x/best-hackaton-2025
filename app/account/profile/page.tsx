@@ -30,7 +30,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user_id, setUser_id] = useState<string | null>(null);
   
   // Profile form states
   const [shelterProfile, setShelterProfile] = useState<ShelterProfile>({
@@ -61,7 +61,7 @@ export default function ProfilePage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       
-      setUserId(user.id);
+      setUser_id(user.id);
       
       // 2. Get user role
       const { data: userData, error: userError } = await supabase
@@ -132,7 +132,7 @@ export default function ProfilePage() {
   };
 
   const saveShelterProfile = async () => {
-    if (!userId) return;
+    if (!user_id) return;
     
     try {
       setIsSaving(true);
@@ -141,7 +141,7 @@ export default function ProfilePage() {
       const { error } = await supabase
         .from("shelters")
         .upsert({
-          id: userId,
+          id: user_id,
           ...shelterProfile,
         });
       
@@ -159,7 +159,7 @@ export default function ProfilePage() {
   };
 
   const saveVolunteerProfile = async () => {
-    if (!userId) return;
+    if (!user_id) return;
     
     try {
       setIsSaving(true);
@@ -168,9 +168,9 @@ export default function ProfilePage() {
       const { error } = await supabase
         .from("volunteers")
         .upsert({
-          id: userId,
+          id: user_id,
           ...volunteerProfile,
-          updatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         });
       
       if (error) throw error;
@@ -322,10 +322,10 @@ export default function ProfilePage() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="donationLink">Donation Link</Label>
+              <Label htmlFor="donation_link">Donation Link</Label>
               <Input
-                id="donationLink"
-                name="donationLink"
+                id="donation_link"
+                name="donation_link"
                 value={shelterProfile.donation_link || ""}
                 onChange={handleShelterChange}
                 placeholder="https://yourshelter.org/donate"

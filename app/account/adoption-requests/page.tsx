@@ -38,12 +38,12 @@ type Volunteer = {
 
 type AdoptionRequest = {
   id: number;
-  volunteerId: string;
-  petId: number;
+  volunteer_id: string;
+  pet_id: number;
   status: string;
   message: string | null;
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
   // Joined data
   pets: Pet;
   volunteers: Volunteer;
@@ -53,7 +53,7 @@ export default function AdoptionRequestsPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user_id, setUser_id] = useState<string | null>(null);
   const [requests, setRequests] = useState<AdoptionRequest[]>([]);
   const [activeTab, setActiveTab] = useState("all");
 
@@ -73,7 +73,7 @@ export default function AdoptionRequestsPage() {
         return;
       }
       
-      setUserId(user.id);
+      setUser_id(user.id);
       
       // Check if user is a shelter
       const { data: userData, error: userError } = await supabase
@@ -119,38 +119,38 @@ export default function AdoptionRequestsPage() {
         return;
       }
       
-      const petIds = pets.map(pet => pet.id);
+      const pet_ids = pets.map(pet => pet.id);
       
       // Get all adoption requests for these pets with joined data
       const { data, error } = await supabase
         .from("adoption_requests")
         .select(`
           *,
-          pets:petId (
+          pets:pet_id (
             id,
             name,
             type,
             images
           ),
-          volunteers:volunteerId (
+          volunteers:volunteer_id (
             id,
             bio,
             phone
           )
         `)
-        .in("petId", petIds)
-        .order("createdAt", { ascending: false });
+        .in("pet_id", pet_ids)
+        .order("created_at", { ascending: false });
       
       if (error) {
         throw error;
       }
       
       // Fetch volunteer emails from auth.users
-      const volunteerIds = data.map(request => request.volunteerId);
+      const volunteer_ids = data.map(request => request.volunteer_id);
       const { data: users, error: usersError } = await supabase
         .from("users") // This joins your users table, not auth.users
         .select("id")
-        .in("id", volunteerIds);
+        .in("id", volunteer_ids);
       
       if (usersError) {
         console.error("Error fetching user emails:", usersError);
@@ -162,7 +162,7 @@ export default function AdoptionRequestsPage() {
         // Add an email property for display purposes
         const volunteer = {
           ...request.volunteers,
-          email: `${request.volunteerId.substring(0, 6)}...@example.com`, // Placeholder
+          email: `${request.volunteer_id.substring(0, 6)}...@example.com`, // Placeholder
         };
         
         return {
@@ -178,8 +178,8 @@ export default function AdoptionRequestsPage() {
     }
   };
 
-  const updateRequestStatus = async (requestId: number, newStatus: string) => {
-    if (!userId) return;
+  const updateRequestStatus = async (request_id: number, newStatus: string) => {
+    if (!user_id) return;
     
     try {
       setIsProcessing(true);
@@ -189,17 +189,17 @@ export default function AdoptionRequestsPage() {
         .from("adoption_requests")
         .update({
           status: newStatus,
-          updatedAt: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
-        .eq("id", requestId);
+        .eq("id", request_id);
       
       if (error) throw error;
       
       // Update local state
       setRequests(prev => 
         prev.map(request => 
-          request.id === requestId 
-            ? { ...request, status: newStatus, updatedAt: new Date().toISOString() } 
+          request.id === request_id 
+            ? { ...request, status: newStatus, updated_at: new Date().toISOString() } 
             : request
         )
       );
@@ -338,9 +338,9 @@ export default function AdoptionRequestsPage() {
                           </CardTitle>
                           <CardDescription className="flex items-center mt-1">
                             <Calendar className="h-3 w-3 mr-1" />
-                            {formatDate(request.createdAt)}
+                            {formatDate(request.created_at)}
                             <Clock className="h-3 w-3 ml-2 mr-1" />
-                            {formatTime(request.createdAt)}
+                            {formatTime(request.created_at)}
                           </CardDescription>
                         </div>
                       </div>

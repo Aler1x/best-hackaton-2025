@@ -31,21 +31,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type FoundPet = {
   id: number;
-  volunteerId: string;
+  volunteer_id: string;
   type: string;
   description: string;
   location: { lat: number; lng: number; } | null;
   status: string;
   images: string[];
-  createdAt: string;
-  updatedAt: string;
+  created_at: string;
+  updated_at: string;
 };
 
 export default function FoundPetsPage() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [user_id, setUser_id] = useState<string | null>(null);
   const [foundPets, setFoundPets] = useState<FoundPet[]>([]);
   
   // New found pet form state
@@ -76,7 +76,7 @@ export default function FoundPetsPage() {
         return;
       }
       
-      setUserId(user.id);
+      setUser_id(user.id);
       
       // Check if user is a volunteer
       const { data: userData, error: userError } = await supabase
@@ -103,15 +103,15 @@ export default function FoundPetsPage() {
     }
   };
 
-  const fetchFoundPets = async (userId: string) => {
+  const fetchFoundPets = async (user_id: string) => {
     try {
       const supabase = createClient();
       
       const { data, error } = await supabase
         .from("found_pets")
         .select("*")
-        .eq("volunteerId", userId)
-        .order("createdAt", { ascending: false });
+        .eq("volunteer_id", user_id)
+        .order("created_at", { ascending: false });
       
       if (error) {
         throw error;
@@ -176,7 +176,7 @@ export default function FoundPetsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!userId) {
+    if (!user_id) {
       toast.error("You must be signed in to report a found pet");
       return;
     }
@@ -233,7 +233,7 @@ export default function FoundPetsPage() {
       const { data, error } = await supabase
         .from("found_pets")
         .insert({
-          volunteerId: userId,
+          volunteer_id: user_id,
           type: newPet.type,
           description: newPet.description,
           location: newPet.location,
@@ -254,7 +254,7 @@ export default function FoundPetsPage() {
       setSelectedFiles([]);
       setUploadProgress(0);
       
-      await fetchFoundPets(userId);
+      await fetchFoundPets(user_id);
       
       toast.success("Found pet reported successfully", {
         description: "Thank you for helping this animal!"
@@ -357,7 +357,7 @@ export default function FoundPetsPage() {
                         <CardTitle className="capitalize">{pet.type}</CardTitle>
                         <CardDescription className="flex items-center mt-1">
                           <Calendar className="h-3 w-3 mr-1" />
-                          {formatDate(pet.createdAt)}
+                          {formatDate(pet.created_at)}
                         </CardDescription>
                       </div>
                       <div className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusBadgeClasses(pet.status)}`}>

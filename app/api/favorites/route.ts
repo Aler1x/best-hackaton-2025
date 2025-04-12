@@ -35,8 +35,8 @@ export async function GET(req: NextRequest) {
       pet: pets,
     })
     .from(favorites)
-    .leftJoin(pets, eq(favorites.petId, pets.id))
-    .where(eq(favorites.volunteerId, user.id));
+    .leftJoin(pets, eq(favorites.pet_id, pets.id))
+    .where(eq(favorites.volunteer_id, user.id));
     
     return NextResponse.json(result);
   } catch (error) {
@@ -71,8 +71,8 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     
     // Validate required fields
-    const { petId } = body;
-    if (!petId) {
+    const { pet_id } = body;
+    if (!pet_id) {
       return NextResponse.json({ error: 'Missing pet ID' }, { status: 400 });
     }
     
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
     const db = await createDrizzleClient();
     
     // Check if the pet exists
-    const pet = await db.select().from(pets).where(eq(pets.id, petId)).limit(1);
+    const pet = await db.select().from(pets).where(eq(pets.id, pet_id)).limit(1);
     
     if (pet.length === 0) {
       return NextResponse.json({ error: 'Pet not found' }, { status: 404 });
@@ -91,8 +91,8 @@ export async function POST(req: NextRequest) {
       .from(favorites)
       .where(
         and(
-          eq(favorites.volunteerId, user.id),
-          eq(favorites.petId, petId)
+          eq(favorites.volunteer_id, user.id),
+          eq(favorites.pet_id, pet_id)
         )
       )
       .limit(1);
@@ -103,8 +103,8 @@ export async function POST(req: NextRequest) {
     
     // Add the favorite
     const newFavorite = await db.insert(favorites).values({
-      volunteerId: user.id,
-      petId,
+      volunteer_id: user.id,
+      pet_id,
     }).returning();
     
     return NextResponse.json(newFavorite[0], { status: 201 });
@@ -118,9 +118,9 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
-    const petId = parseInt(searchParams.get('petId') || '0');
+    const pet_id = parseInt(searchParams.get('pet_id') || '0');
     
-    if (!petId) {
+    if (!pet_id) {
       return NextResponse.json({ error: 'Missing pet ID' }, { status: 400 });
     }
     
@@ -139,8 +139,8 @@ export async function DELETE(req: NextRequest) {
     const deleted = await db.delete(favorites)
       .where(
         and(
-          eq(favorites.volunteerId, user.id),
-          eq(favorites.petId, petId)
+          eq(favorites.volunteer_id, user.id),
+          eq(favorites.pet_id, pet_id)
         )
       )
       .returning();

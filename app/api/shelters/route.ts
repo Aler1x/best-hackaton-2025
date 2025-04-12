@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createDrizzleClient } from '@/lib/db';
-import { shelters } from '@/db/schema';
-import { like } from 'drizzle-orm';
+import { pets, shelters } from '@/db/schema';
+import { inArray, like } from 'drizzle-orm';
 import { createClient } from '@/utils/supabase/server';
 
 // GET /api/shelters - Get all shelters with optional filtering
@@ -20,11 +20,11 @@ export async function GET(req: NextRequest) {
     
     // Apply name filter if provided
     if (name) {
-      query = query.where(like(shelters.name, `%${name}%`));
+      query = query.where(like(shelters.name, `%${name}%`)) as typeof query;
     }
     
     // Apply pagination
-    query = query.limit(limit).offset(offset);
+    query = query.limit(limit).offset(offset) as typeof query;
     
     // Execute query
     const result = await query;

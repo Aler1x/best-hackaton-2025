@@ -10,7 +10,7 @@ interface ShelterCardProps {
   address?: string;
   phone?: string;
   website?: string;
-  donationLink?: string;
+  donation_link?: string;
   onViewDetails?: () => void;
 }
 
@@ -21,7 +21,7 @@ export default function ShelterCard({
   address,
   phone,
   website,
-  donationLink,
+  donation_link,
   onViewDetails
 }: ShelterCardProps) {
   return (

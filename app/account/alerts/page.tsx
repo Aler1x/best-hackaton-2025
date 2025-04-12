@@ -28,7 +28,7 @@ interface PetAlert {
     radius: number;
   };
   active: boolean;
-  createdAt: string;
+  created_at: string;
 }
 
 export default function AlertsPage() {
@@ -62,7 +62,7 @@ export default function AlertsPage() {
                 radius: 10,
               },
               active: true,
-              createdAt: new Date().toISOString(),
+              created_at: new Date().toISOString(),
             },
             {
               id: 2,
@@ -73,7 +73,7 @@ export default function AlertsPage() {
                 radius: 5,
               },
               active: false,
-              createdAt: new Date().toISOString(),
+              created_at: new Date().toISOString(),
             },
           ]);
           setIsLoading(false);
@@ -163,7 +163,7 @@ export default function AlertsPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>{formatLocation(alert.location)}</TableCell>
-                    <TableCell>{formatDate(alert.createdAt)}</TableCell>
+                    <TableCell>{formatDate(alert.created_at)}</TableCell>
                     <TableCell>
                       <Switch
                         checked={alert.active}

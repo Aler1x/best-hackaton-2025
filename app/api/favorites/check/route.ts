@@ -4,13 +4,13 @@ import { favorites } from '@/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { createClient } from '@/utils/supabase/server';
 
-// GET /api/favorites/check?petId=1
+// GET /api/favorites/check?pet_id=1
 export async function GET(req: NextRequest) {
   try {
     const searchParams = req.nextUrl.searchParams;
-    const petId = parseInt(searchParams.get('petId') || '0');
+    const pet_id = parseInt(searchParams.get('pet_id') || '0');
     
-    if (!petId) {
+    if (!pet_id) {
       return NextResponse.json({ error: 'Missing pet ID' }, { status: 400 });
     }
     
@@ -30,8 +30,8 @@ export async function GET(req: NextRequest) {
       .from(favorites)
       .where(
         and(
-          eq(favorites.volunteerId, user.id),
-          eq(favorites.petId, petId)
+          eq(favorites.volunteer_id, user.id),
+          eq(favorites.pet_id, pet_id)
         )
       )
       .limit(1);

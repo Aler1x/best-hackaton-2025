@@ -41,12 +41,12 @@ export default function FavoritesPage() {
     fetchFavorites();
   }, [favoriteStatus]);
 
-  const handleViewDetails = (petId: number) => {
-    router.push(`/pets/${petId}`);
+  const handleViewDetails = (pet_id: number) => {
+    router.push(`/pets/${pet_id}`);
   };
 
-  const handleRemoveFavorite = (petId: number) => {
-    toggleFavorite(petId);
+  const handleRemoveFavorite = (pet_id: number) => {
+    toggleFavorite(pet_id);
   };
 
   return (
