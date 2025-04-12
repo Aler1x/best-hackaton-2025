@@ -1,240 +1,493 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Eye } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogDescription, 
+  DialogFooter, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { toast } from "sonner";
-import AddButton from "@/components/add-button";
-import PetForm from "@/components/pet-form";
+import { 
+  PawPrint, 
+  Plus, 
+  Search, 
+  Filter, 
+  ArrowUpDown, 
+  Info,
+  Calendar,
+  Heart,
+  Edit,
+  Trash,
+  Pencil
+} from "lucide-react";
+import Link from "next/link";
 
-interface Pet {
+type Pet = {
   id: number;
   name: string;
-  type: string;
   sex: string;
   age: number;
+  type: string;
   status: string;
-  description?: string;
-  health?: string;
-  images?: string[];
+  description: string | null;
+  health: string | null;
+  location: { lat: number; lng: number; } | null;
   shelterId: string;
   createdAt: string;
   updatedAt: string;
-}
+  images: string[];
+};
 
-export default function MyPetsPage() {
-  const [pets, setPets] = useState<Pet[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+export default function PetsPage() {
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
+  const [pets, setPets] = useState<Pet[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState<string>("all");
+  const [filterType, setFilterType] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<string>("name-asc");
+  
+  // Selected pet for detail view
+  const [selectedPet, setSelectedPet] = useState<Pet | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   useEffect(() => {
-    const fetchPets = async () => {
+    checkUser();
+  }, []);
+
+  const checkUser = async () => {
       try {
-        // Check if user is logged in
+      setIsLoading(true);
         const supabase = createClient();
+      
+      // Check authentication
         const { data: { user } } = await supabase.auth.getUser();
-        
         if (!user) {
-          router.push("/auth/signin");
+        router.push("/auth/signin?next=/account/pets");
           return;
         }
 
         setUserId(user.id);
 
-        // Get shelter's pets
-        const response = await fetch(`/api/pets?shelterId=${user.id}`);
-        if (!response.ok) {
-          throw new Error("Failed to fetch pets");
-        }
-        
-        const data = await response.json();
-        setPets(data);
-      } catch (error) {
-        console.error("Error fetching pets:", error);
-        toast.error("Failed to load your pets");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchPets();
-  }, [router]);
-
-  const handleDeletePet = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this pet?")) {
-      return;
-    }
-
-    try {
-      const response = await fetch(`/api/pets?id=${id}`, {
-        method: "DELETE",
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to delete pet");
-      }
-
-      // Remove the deleted pet from state
-      setPets(pets.filter((pet) => pet.id !== id));
+      // Check if user is a shelter
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("role")
+        .eq("id", user.id)
+        .single();
       
-      toast.success("Pet deleted successfully");
+      if (userError || userData?.role !== "shelter") {
+        toast.error("Access denied", {
+          description: "Only shelters can access this page"
+        });
+        router.push("/account");
+      return;
+      }
+      
+      // Fetch pets for this shelter
+      await fetchPets(user.id);
+      
     } catch (error) {
-      console.error("Error deleting pet:", error);
-      toast.error("Failed to delete pet");
+      console.error("Error checking user:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleAddPet = async (petData: any) => {
+  const fetchPets = async (shelterId: string) => {
     try {
-      const response = await fetch("/api/pets", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(petData),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create pet");
+      const supabase = createClient();
+      
+      const { data, error } = await supabase
+        .from("pets")
+        .select("*")
+        .eq("shelterId", shelterId);
+      
+      if (error) {
+        throw error;
       }
-
-      const newPet = await response.json();
       
-      // Add the new pet to the list
-      setPets((prevPets) => [newPet, ...prevPets]);
-      
-      toast.success("Pet added successfully");
-      return true;
-    } catch (error: any) {
-      console.error("Error creating pet:", error);
-      toast.error(error.message || "Failed to create pet");
-      return false;
+      setPets(data || []);
+    } catch (error) {
+      console.error("Error fetching pets:", error);
+      toast.error("Failed to load pets");
     }
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  const getStatusBadgeVariant = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "waiting":
-        return "default";
+        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Waiting</Badge>;
       case "in_shelter":
-        return "neutral";
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">In Shelter</Badge>;
       case "adopted":
-        return "neutral";
+        return <Badge className="bg-green-100 text-green-800 border-green-200">Adopted</Badge>;
       default:
-        return "default";
+        return <Badge>{status}</Badge>;
     }
   };
+  
+  const handleOpenDetail = (pet: Pet) => {
+    setSelectedPet(pet);
+    setIsDetailOpen(true);
+  };
 
-  const renderPetsTable = () => (
-    <Table>
-      <TableHeader>
-        <TableRow>
-          <TableHead>Name</TableHead>
-          <TableHead>Type</TableHead>
-          <TableHead>Sex</TableHead>
-          <TableHead>Age</TableHead>
-          <TableHead>Status</TableHead>
-          <TableHead>Added</TableHead>
-          <TableHead className="text-right">Actions</TableHead>
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {pets.map((pet) => (
-          <TableRow key={pet.id}>
-            <TableCell className="font-medium">{pet.name}</TableCell>
-            <TableCell>{pet.type}</TableCell>
-            <TableCell>{pet.sex}</TableCell>
-            <TableCell>{pet.age}</TableCell>
-            <TableCell>
-              <Badge variant={getStatusBadgeVariant(pet.status)}>
-                {pet.status === "in_shelter" ? "In Shelter" : 
-                  pet.status.charAt(0).toUpperCase() + pet.status.slice(1)}
-              </Badge>
-            </TableCell>
-            <TableCell>{formatDate(pet.createdAt)}</TableCell>
-            <TableCell className="text-right">
-              <div className="flex justify-end space-x-2">
-                <Button
-                  variant="neutral"
-                  size="icon"
-                  onClick={() => router.push(`/pets/${pet.id}`)}
-                >
-                  <span className="sr-only">View</span>
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="neutral"
-                  size="icon"
-                  onClick={() => router.push(`/pets/${pet.id}/edit`)}
-                >
-                  <span className="sr-only">Edit</span>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  onClick={() => handleDeletePet(pet.id)}
-                >
-                  <span className="sr-only">Delete</span>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+  // Filtering and sorting logic
+  const filteredAndSortedPets = () => {
+    // First apply filters
+    let filtered = pets;
+    
+    // Filter by search query (name or description)
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(pet => 
+        pet.name.toLowerCase().includes(query) || 
+        (pet.description && pet.description.toLowerCase().includes(query))
+      );
+    }
+    
+    // Filter by status
+    if (filterStatus !== "all") {
+      filtered = filtered.filter(pet => pet.status === filterStatus);
+    }
+    
+    // Filter by type
+    if (filterType !== "all") {
+      filtered = filtered.filter(pet => pet.type === filterType);
+    }
+    
+    // Apply sorting
+    const [field, direction] = sortBy.split('-');
+    
+    return filtered.sort((a, b) => {
+      // Handle different sort fields
+      switch (field) {
+        case "name":
+          return direction === 'asc' 
+            ? a.name.localeCompare(b.name) 
+            : b.name.localeCompare(a.name);
+        case "age":
+          return direction === 'asc' 
+            ? a.age - b.age 
+            : b.age - a.age;
+        case "date":
+          return direction === 'asc' 
+            ? new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() 
+            : new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        default:
+          return 0;
+      }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <p>Loading pets...</p>
               </div>
-            </TableCell>
-          </TableRow>
-        ))}
-      </TableBody>
-    </Table>
   );
+  }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
+    <div className="space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold">My Pets</h1>
-          <p className="text-muted-foreground">Manage your shelter's pets</p>
+          <h1 className="text-3xl font-bold">Your Pets</h1>
+          <p className="text-muted-foreground">
+            Manage the pets available for adoption at your shelter
+          </p>
+        </div>
+        <Link href="/account/pets/new">
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Add New Pet
+          </Button>
+        </Link>
+      </div>
+
+      {/* Filters and search */}
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className="relative flex-grow">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search pets..."
+            className="pl-9"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
+          <div className="w-full sm:w-auto">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <Filter className="h-4 w-4 mr-2" />
+                <span>Status</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="waiting">Waiting</SelectItem>
+                <SelectItem value="in_shelter">In Shelter</SelectItem>
+                <SelectItem value="adopted">Adopted</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-full sm:w-auto">
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <PawPrint className="h-4 w-4 mr-2" />
+                <span>Type</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="cat">Cats</SelectItem>
+                <SelectItem value="dog">Dogs</SelectItem>
+                <SelectItem value="rabbit">Rabbits</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-full sm:w-auto">
+            <Select value={sortBy} onValueChange={setSortBy}>
+              <SelectTrigger className="w-full sm:w-[150px]">
+                <ArrowUpDown className="h-4 w-4 mr-2" />
+                <span>Sort By</span>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="name-asc">Name (A-Z)</SelectItem>
+                <SelectItem value="name-desc">Name (Z-A)</SelectItem>
+                <SelectItem value="age-asc">Age (Low-High)</SelectItem>
+                <SelectItem value="age-desc">Age (High-Low)</SelectItem>
+                <SelectItem value="date-desc">Newest First</SelectItem>
+                <SelectItem value="date-asc">Oldest First</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
+      {/* Pets grid */}
+      {pets.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <PawPrint className="h-16 w-16 text-muted-foreground mb-4 opacity-20" />
+            <h3 className="text-lg font-medium mb-2">No pets yet</h3>
+            <p className="text-muted-foreground mb-6">
+              Add pets to your shelter to help them find a new home
+            </p>
+            <Link href="/account/pets/new">
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Your First Pet
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : filteredAndSortedPets().length === 0 ? (
       <Card>
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="flex justify-center items-center h-60">
-              <p>Loading pets...</p>
-            </div>
-          ) : pets.length > 0 ? (
-            renderPetsTable()
-          ) : (
-            <div className="flex flex-col items-center justify-center h-60">
-              <p className="text-muted-foreground mb-4">You don't have any pets yet.</p>
-              <p className="text-sm text-muted-foreground">
-                Click the + button to add your first pet.
-              </p>
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <Search className="h-16 w-16 text-muted-foreground mb-4 opacity-20" />
+            <h3 className="text-lg font-medium mb-2">No pets match your filters</h3>
+            <p className="text-muted-foreground mb-6">
+              Try changing your search or filter criteria
+            </p>
+            <Button variant="neutral" onClick={() => {
+              setSearchQuery("");
+              setFilterStatus("all");
+              setFilterType("all");
+            }}>
+              Clear Filters
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredAndSortedPets().map((pet) => (
+            <Card 
+              key={pet.id} 
+              className="overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => handleOpenDetail(pet)}
+            >
+              <div className="relative h-48 bg-muted">
+                {pet.images && pet.images.length > 0 ? (
+                  <img 
+                    src={pet.images[0]} 
+                    alt={pet.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-full w-full flex items-center justify-center">
+                    <PawPrint className="h-12 w-12 text-muted-foreground opacity-30" />
             </div>
           )}
+                <div className="absolute top-2 right-2">
+                  {getStatusBadge(pet.status)}
+                </div>
+              </div>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle className="flex items-center">
+                      {pet.name} {pet.sex}
+                    </CardTitle>
+                    <CardDescription className="capitalize">
+                      {pet.type}, {pet.age} {pet.age === 1 ? 'year' : 'years'} old
+                    </CardDescription>
+                  </div>
+                  <Button 
+                    size="icon" 
+                    variant="neutral" 
+                    className="h-8 w-8"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      router.push(`/account/pets/${pet.id}/edit`);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="pb-4">
+                <p className="text-sm line-clamp-2 text-muted-foreground">
+                  {pet.description || "No description provided."}
+                </p>
         </CardContent>
       </Card>
+          ))}
+        </div>
+      )}
 
-      <AddButton title="Add New Pet" description="Fill in the details to add a new pet to your shelter.">
-        <PetForm onSubmit={handleAddPet} shelterId={userId} />
-      </AddButton>
+      {/* Pet detail modal */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        {selectedPet && (
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle className="flex items-center text-xl">
+                {selectedPet.name} {selectedPet.sex}
+                <span className="ml-auto">{getStatusBadge(selectedPet.status)}</span>
+              </DialogTitle>
+              <DialogDescription className="text-base capitalize">
+                {selectedPet.type}, {selectedPet.age} {selectedPet.age === 1 ? 'year' : 'years'} old
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-6">
+              {/* Pet images */}
+              {selectedPet.images && selectedPet.images.length > 0 ? (
+                <div className="relative h-64 rounded-md overflow-hidden">
+                  <img 
+                    src={selectedPet.images[0]} 
+                    alt={selectedPet.name}
+                    className="h-full w-full object-cover"
+                  />
+                  {selectedPet.images.length > 1 && (
+                    <div className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded-full">
+                      +{selectedPet.images.length - 1} more photos
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="h-64 bg-muted rounded-md flex items-center justify-center">
+                  <PawPrint className="h-12 w-12 text-muted-foreground opacity-30" />
+                </div>
+              )}
+
+              {/* Pet details */}
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-1">
+                  <p className="font-medium flex items-center">
+                    <PawPrint className="h-4 w-4 mr-2 text-muted-foreground" />
+                    Type
+                  </p>
+                  <p className="capitalize pl-6">{selectedPet.type}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="font-medium flex items-center">
+                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                    Age
+                  </p>
+                  <p className="pl-6">{selectedPet.age} {selectedPet.age === 1 ? 'year' : 'years'}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="font-medium flex items-center">
+                    <Heart className="h-4 w-4 mr-2 text-muted-foreground" />
+                    Health
+                  </p>
+                  <p className="pl-6">{selectedPet.health || "No health info provided"}</p>
+                </div>
+                
+                <div className="space-y-1">
+                  <p className="font-medium flex items-center">
+                    <Info className="h-4 w-4 mr-2 text-muted-foreground" />
+                    Listed On
+                  </p>
+                  <p className="pl-6">{formatDate(selectedPet.createdAt)}</p>
+                </div>
+              </div>
+
+              {/* Description */}
+              <div className="space-y-2">
+                <p className="font-medium">Description</p>
+                <p className="text-sm whitespace-pre-line">
+                  {selectedPet.description || "No description provided."}
+                </p>
+              </div>
+            </div>
+
+            <DialogFooter className="flex gap-2 sm:gap-0">
+              <Button 
+                variant="neutral"
+                className="border-red-200 text-red-700 hover:bg-red-50"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDetailOpen(false);
+                  // Navigate to delete confirmation
+                }}
+              >
+                <Trash className="h-4 w-4 mr-2" />
+                Delete
+              </Button>
+              
+              <Link href={`/account/pets/${selectedPet.id}/edit`}>
+                <Button>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Pet
+                </Button>
+              </Link>
+            </DialogFooter>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   );
 } 

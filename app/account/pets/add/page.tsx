@@ -22,7 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 export default function AddPetPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -65,19 +65,12 @@ export default function AddPetPage() {
 
       const data = await response.json();
       
-      toast({
-        title: "Success",
-        description: "Pet added successfully",
-      });
+      toast.success("Pet added successfully");
       
       router.push(`/pets/${data.id}`);
     } catch (error: any) {
       console.error("Error creating pet:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create pet",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Failed to create pet");
     } finally {
       setIsLoading(false);
     }
